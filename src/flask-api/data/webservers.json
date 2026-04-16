@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "Mon Serveur Web",
+    "root": "/var/www/html",
+    "index": "index.html",
+    "error_page": "/error-page.html"
+  },
+  {
+    "id": 2,
+    "name": "Site Vitrine",
+    "root": "/var/www/vitrine",
+    "index": "index.html index.htm",
+    "error_page": "/error-page.html"
+  },
+  {
+    "id": 3,
+    "name": "tp_tech_web_server",
+    "root": "/var/www/html",
+    "index": "index.html index.htm",
+    "error_page": "/error-page.html"
+  },
+  {
+    "id": 4,
+    "name": "omagvg",
+    "root": "sgsg",
+    "index": "index.html index.htm",
+    "error_page": "/error-page.html"
+  }
+]

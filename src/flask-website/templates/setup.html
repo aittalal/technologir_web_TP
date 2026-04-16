@@ -1,0 +1,235 @@
+{% extends "layout.html" %}
+{% block title %}Guide de Déploiement{% endblock %}
+{% block content %}
+<div class="container pb-5">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2>🚀 Guide de Déploiement</h2>
+      <p class="text-muted mb-0">Commandes et fichiers de configuration pour déployer vos serveurs avec Docker</p>
+    </div>
+    {% if webservers or reverseproxies or loadbalancers %}
+    <a href="{{ url_for('setup_download_compose') }}" class="btn btn-primary">
+      ⬇ Télécharger docker-compose.yml
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- ÉTAPE 0 – Prérequis -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <strong>Étape 1 — Prérequis : Installation de Docker</strong>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small mb-2">À exécuter une seule fois sur votre machine / VM :</p>
+      <pre class="bg-dark text-light p-3 rounded mb-2"><code id="step1"># Mise à jour des paquets
+sudo apt-get update && sudo apt-get upgrade -y
+
+# Installation de Docker
+sudo apt-get install -y docker.io docker-compose
+
+# Démarrage et activation du service
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Vérification
+docker --version
+docker-compose --version</code></pre>
+      <button class="btn btn-sm btn-outline-secondary" onclick="copyBlock('step1')">📋 Copier</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 2 – Récupérer l'image nginx -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <strong>Étape 2 — Récupérer l'image Nginx</strong>
+    </div>
+    <div class="card-body">
+      <pre class="bg-dark text-light p-3 rounded mb-2"><code id="step2"># Télécharger l'image officielle nginx
+docker pull nginx:latest
+
+# Vérifier les images disponibles
+docker images</code></pre>
+      <button class="btn btn-sm btn-outline-secondary" onclick="copyBlock('step2')">📋 Copier</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 3 – Structure des fichiers -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <strong>Étape 3 — Préparer la structure des fichiers</strong>
+    </div>
+    <div class="card-body">
+      <pre class="bg-dark text-light p-3 rounded mb-2"><code id="step3"># Créer l'arborescence du projet
+mkdir -p ~/nginx-deploy/configs
+
+# Télécharger vos fichiers .conf depuis l'interface (bouton ⬇ Télécharger)
+# et les placer dans :
+#   ~/nginx-deploy/configs/
+
+# Vérifier la structure
+ls -la ~/nginx-deploy/configs/</code></pre>
+      <button class="btn btn-sm btn-outline-secondary" onclick="copyBlock('step3')">📋 Copier</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 4 – Containers individuels -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <strong>Étape 4 — Lancer les containers Docker</strong>
+    </div>
+    <div class="card-body">
+
+      {% if webservers %}
+      <h6 class="text-success mt-2">📄 Serveurs Web</h6>
+      {% set port = namespace(val=8080) %}
+      {% for ws in webservers %}
+      {% set sname = ws.name | lower | replace(' ', '_') %}
+      <p class="mb-1"><code class="text-info">{{ ws.name }}</code>
+        <a href="{{ url_for('webservers_detail', id=ws.id) }}" class="btn btn-xs btn-sm btn-outline-primary ms-2" style="font-size:0.75rem;">Voir config</a>
+        <a href="{{ url_for('webservers_download', id=ws.id) }}" class="btn btn-xs btn-sm btn-outline-success ms-1" style="font-size:0.75rem;">⬇ .conf</a>
+      </p>
+      <pre class="bg-dark text-light p-3 rounded mb-3" id="ws_{{ ws.id }}"><code>docker run -d \
+  --name webserver_{{ sname }} \
+  -p {{ port.val }}:80 \
+  -v ~/nginx-deploy/configs/nginx-webserver-{{ sname }}.conf:/etc/nginx/nginx.conf:ro \
+  -v {{ ws.root }}:{{ ws.root }}:ro \
+  --restart unless-stopped \
+  nginx:latest
+
+# Vérifier que le container tourne
+docker ps | grep webserver_{{ sname }}
+
+# Tester
+curl http://localhost:{{ port.val }}</code></pre>
+      <button class="btn btn-sm btn-outline-secondary mb-3" onclick="copyBlock('ws_{{ ws.id }}')">📋 Copier</button>
+      {% set port.val = port.val + 1 %}
+      {% endfor %}
+      {% endif %}
+
+      {% if reverseproxies %}
+      <h6 class="text-warning mt-2">⇄ Reverse Proxies</h6>
+      {% for rp in reverseproxies %}
+      {% set sname = rp.name | lower | replace(' ', '_') %}
+      <p class="mb-1"><code class="text-info">{{ rp.name }}</code>
+        <a href="{{ url_for('reverseproxies_detail', id=rp.id) }}" class="btn btn-sm btn-outline-primary ms-2" style="font-size:0.75rem;">Voir config</a>
+        <a href="{{ url_for('reverseproxies_download', id=rp.id) }}" class="btn btn-sm btn-outline-success ms-1" style="font-size:0.75rem;">⬇ .conf</a>
+      </p>
+      <pre class="bg-dark text-light p-3 rounded mb-3" id="rp_{{ rp.id }}"><code>docker run -d \
+  --name reverseproxy_{{ sname }} \
+  -p {{ port.val }}:80 \
+  -v ~/nginx-deploy/configs/nginx-reverseproxy-{{ sname }}.conf:/etc/nginx/nginx.conf:ro \
+  --restart unless-stopped \
+  nginx:latest
+
+docker ps | grep reverseproxy_{{ sname }}
+curl http://localhost:{{ port.val }}</code></pre>
+      <button class="btn btn-sm btn-outline-secondary mb-3" onclick="copyBlock('rp_{{ rp.id }}')">📋 Copier</button>
+      {% set port.val = port.val + 1 %}
+      {% endfor %}
+      {% endif %}
+
+      {% if loadbalancers %}
+      <h6 class="text-danger mt-2">⚖ Load Balancers</h6>
+      {% for lb in loadbalancers %}
+      {% set sname = lb.name | lower | replace(' ', '_') %}
+      <p class="mb-1"><code class="text-info">{{ lb.name }}</code>
+        <a href="{{ url_for('loadbalancers_detail', id=lb.id) }}" class="btn btn-sm btn-outline-primary ms-2" style="font-size:0.75rem;">Voir config</a>
+        <a href="{{ url_for('loadbalancers_download', id=lb.id) }}" class="btn btn-sm btn-outline-success ms-1" style="font-size:0.75rem;">⬇ .conf</a>
+      </p>
+      <pre class="bg-dark text-light p-3 rounded mb-3" id="lb_{{ lb.id }}"><code>docker run -d \
+  --name loadbalancer_{{ sname }} \
+  -p {{ port.val }}:80 \
+  -v ~/nginx-deploy/configs/nginx-loadbalancer-{{ sname }}.conf:/etc/nginx/nginx.conf:ro \
+  --restart unless-stopped \
+  nginx:latest
+
+docker ps | grep loadbalancer_{{ sname }}
+curl http://localhost:{{ port.val }}</code></pre>
+      <button class="btn btn-sm btn-outline-secondary mb-3" onclick="copyBlock('lb_{{ lb.id }}')">📋 Copier</button>
+      {% set port.val = port.val + 1 %}
+      {% endfor %}
+      {% endif %}
+
+      {% if not webservers and not reverseproxies and not loadbalancers %}
+      <div class="alert alert-info">
+        Aucun serveur configuré pour le moment. Ajoutez des serveurs web, reverse proxies ou load balancers pour voir les commandes de déploiement.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ÉTAPE 5 – docker-compose -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <strong>Étape 5 — Déploiement global avec docker-compose</strong>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small">Alternativement, utilisez docker-compose pour tout lancer d'un coup :</p>
+      <pre class="bg-dark text-light p-3 rounded mb-2"><code id="step5">cd ~/nginx-deploy/
+
+# Télécharger le docker-compose.yml généré (bouton en haut de page)
+# puis lancer tous les containers :
+docker-compose up -d
+
+# Vérifier l'état
+docker-compose ps
+
+# Voir les logs
+docker-compose logs -f
+
+# Stopper tout
+docker-compose down</code></pre>
+      <button class="btn btn-sm btn-outline-secondary" onclick="copyBlock('step5')">📋 Copier</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 6 – Commandes utiles -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <strong>Commandes Docker utiles</strong>
+    </div>
+    <div class="card-body">
+      <pre class="bg-dark text-light p-3 rounded mb-2"><code id="step6"># Lister les containers en cours
+docker ps
+
+# Lister tous les containers (y compris stoppés)
+docker ps -a
+
+# Voir les logs d'un container
+docker logs <nom_du_container>
+
+# Recharger la config nginx sans redémarrer
+docker exec <nom_du_container> nginx -s reload
+
+# Vérifier la syntaxe d'un fichier nginx
+docker exec <nom_du_container> nginx -t
+
+# Stopper un container
+docker stop <nom_du_container>
+
+# Supprimer un container
+docker rm <nom_du_container>
+
+# Inspecter un container
+docker inspect <nom_du_container></code></pre>
+      <button class="btn btn-sm btn-outline-secondary" onclick="copyBlock('step6')">📋 Copier</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copyBlock(id) {
+  const el = document.getElementById(id);
+  const text = el.querySelector('code') ? el.querySelector('code').innerText : el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✔ Copié !';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+</script>
+{% endblock %}

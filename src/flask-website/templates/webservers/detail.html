@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block title %}Config – {{ item.name }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2>Configuration Nginx – {{ item.name }}</h2>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('webservers_download', id=item.id) }}" class="btn btn-outline-success">
+        ⬇ Télécharger .conf
+      </a>
+      <a href="{{ url_for('webservers_list') }}" class="btn btn-secondary">← Retour</a>
+    </div>
+  </div>
+  <div class="position-relative">
+    <pre class="bg-dark text-light p-4 rounded" id="configBlock"><code>http {
+    server {
+        root {{ item.root }};
+
+        location / {
+            index {{ item.index }};
+        }
+
+        error_page 404 403 500 503 {{ item.error_page }};
+        location = {{ item.error_page }} {
+            root /var/www/error;
+            internal;
+        }
+    }
+}</code></pre>
+    <button class="btn btn-sm btn-outline-light position-absolute top-0 end-0 m-2" onclick="copyConfig()" title="Copier">
+      📋 Copier
+    </button>
+  </div>
+  <div class="mt-3">
+    <small class="text-muted">Fichier : <code>nginx-webserver-{{ item.name|lower|replace(' ','_') }}.conf</code></small>
+  </div>
+</div>
+<script>
+function copyConfig() {
+  const text = document.querySelector('#configBlock code').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✔ Copié !';
+    setTimeout(() => btn.textContent = '📋 Copier', 2000);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+http {
+    server {
+        root /www/data;
+
+        location / {
+            index index.html index.htm;
+        }
+
+        error_page 404 403 500 503 /error-page.html;
+        location = /error-page.html {
+            root /var/www/error;
+            internal;
+        }
+    }
+}

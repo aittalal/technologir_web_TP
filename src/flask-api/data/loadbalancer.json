@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "LB Inter 1",
+    "ip_bind": "172.0.0.1",
+    "pass": "http://localhost/A"
+  },
+  {
+    "id": 3,
+    "name": "LB test_usmb",
+    "ip_bind": "172.0.0.1",
+    "pass": "http://localhost/USMB"
+  }
+]

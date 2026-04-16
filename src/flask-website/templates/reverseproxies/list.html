@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block title %}Reverse Proxy{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Reverse Proxy</h2>
+    <a href="{{ url_for('reverseproxies_add') }}" class="btn btn-success">+ Ajouter</a>
+  </div>
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+      <tr><th>#</th><th>Nom</th><th>Serveur 1</th><th>Serveur 2</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.name }}</td>
+        <td><code>{{ item.server1 }}</code></td>
+        <td><code>{{ item.server2 }}</code></td>
+        <td>
+          <a href="{{ url_for('reverseproxies_detail', id=item.id) }}" class="btn btn-sm btn-primary">Config Nginx</a>
+          <form method="POST" action="{{ url_for('reverseproxies_delete', id=item.id) }}" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-center text-muted">Aucun reverse proxy.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

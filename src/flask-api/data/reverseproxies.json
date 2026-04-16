@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "Proxy App",
+    "server1": "server1.domain.tld",
+    "server2": "server2.domain.tld",
+    "lb_method": ""
+  },
+  {
+    "id": 3,
+    "name": "tech",
+    "server1": "ali.domain.tld",
+    "server2": "omar.domain.tld",
+    "lb_method": "least_conn;"
+  }
+]

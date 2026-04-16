@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+{% block title %}Ajouter un Serveur Web{% endblock %}
+{% block content %}
+<div class="container">
+  <h2 class="mb-4">Ajouter un Serveur Web</h2>
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <form method="POST" id="wsForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
+              <input type="text" name="name" id="name" class="form-control {% if errors.name %}is-invalid{% endif %}"
+                value="{{ form_data.get('name', '') }}" placeholder="Mon serveur web" maxlength="100">
+              <div class="invalid-feedback">{{ errors.name or "Le nom est obligatoire." }}</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Répertoire racine <span class="text-danger">*</span></label>
+              <input type="text" name="root" id="root" class="form-control {% if errors.root %}is-invalid{% endif %}"
+                value="{{ form_data.get('root', '/var/www/html') }}" placeholder="/var/www/html">
+              <div class="invalid-feedback">{{ errors.root or "Chemin absolu requis (commence par /)." }}</div>
+              <div class="form-text">Doit être un chemin absolu Linux (ex: /var/www/html)</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Fichiers index <span class="text-danger">*</span></label>
+              <input type="text" name="index" id="index" class="form-control {% if errors.index %}is-invalid{% endif %}"
+                value="{{ form_data.get('index', 'index.html index.htm') }}" placeholder="index.html index.htm">
+              <div class="invalid-feedback">{{ errors.index or "Ce champ est obligatoire." }}</div>
+              <div class="form-text">Plusieurs fichiers séparés par des espaces</div>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Page d'erreur <span class="text-danger">*</span></label>
+              <input type="text" name="error_page" id="error_page" class="form-control {% if errors.error_page %}is-invalid{% endif %}"
+                value="{{ form_data.get('error_page', '/error-page.html') }}" placeholder="/error-page.html">
+              <div class="invalid-feedback">{{ errors.error_page or "Chemin absolu requis (commence par /)." }}</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">✔ Enregistrer</button>
+              <a href="{{ url_for('webservers_list') }}" class="btn btn-secondary">Annuler</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('wsForm');
+
+  function validateField(el, condition, msg) {
+    if (!condition) {
+      el.classList.add('is-invalid');
+      el.classList.remove('is-valid');
+      el.nextElementSibling.textContent = msg;
+      return false;
+    }
+    el.classList.remove('is-invalid');
+    el.classList.add('is-valid');
+    return true;
+  }
+
+  function validateAll() {
+    let ok = true;
+    const name = document.getElementById('name');
+    const root = document.getElementById('root');
+    const index = document.getElementById('index');
+    const ep = document.getElementById('error_page');
+
+    if (!validateField(name, name.value.trim().length > 0 && name.value.trim().length <= 100,
+        "Le nom est obligatoire (max 100 caractères).")) ok = false;
+    if (!validateField(root, root.value.trim().startsWith('/') && root.value.trim().length > 1,
+        "Le chemin doit être absolu (commence par /).")) ok = false;
+    if (!validateField(index, index.value.trim().length > 0,
+        "Le fichier index est obligatoire.")) ok = false;
+    if (!validateField(ep, ep.value.trim().startsWith('/') && ep.value.trim().length > 1,
+        "Le chemin doit être absolu (commence par /).")) ok = false;
+    return ok;
+  }
+
+  // Validation en temps réel
+  ['name','root','index','error_page'].forEach(id => {
+    document.getElementById(id).addEventListener('input', validateAll);
+    document.getElementById(id).addEventListener('blur', validateAll);
+  });
+
+  form.addEventListener('submit', function(e) {
+    if (!validateAll()) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
+})();
+</script>
+{% endblock %}

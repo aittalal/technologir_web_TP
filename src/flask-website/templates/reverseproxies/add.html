@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block title %}Ajouter un Reverse Proxy{% endblock %}
+{% block content %}
+<div class="container">
+  <h2 class="mb-4">Ajouter un Reverse Proxy</h2>
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <form method="POST" id="rpForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
+              <input type="text" name="name" id="name" class="form-control {% if errors.name %}is-invalid{% endif %}"
+                value="{{ form_data.get('name', '') }}" placeholder="Mon proxy" maxlength="100">
+              <div class="invalid-feedback">{{ errors.name or "Le nom est obligatoire." }}</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Serveur 1 <span class="text-danger">*</span></label>
+              <input type="text" name="server1" id="server1" class="form-control {% if errors.server1 %}is-invalid{% endif %}"
+                value="{{ form_data.get('server1', '') }}" placeholder="server1.domain.tld">
+              <div class="invalid-feedback">{{ errors.server1 or "Hostname valide requis." }}</div>
+              <div class="form-text">Format : hostname ou domaine (ex: server1.example.com)</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Serveur 2 <span class="text-danger">*</span></label>
+              <input type="text" name="server2" id="server2" class="form-control {% if errors.server2 %}is-invalid{% endif %}"
+                value="{{ form_data.get('server2', '') }}" placeholder="server2.domain.tld">
+              <div class="invalid-feedback">{{ errors.server2 or "Hostname valide requis." }}</div>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Méthode de load balancing</label>
+              <select name="lb_method" id="lb_method" class="form-select">
+                <option value="" {% if not form_data.get('lb_method') %}selected{% endif %}>Round Robin (défaut)</option>
+                <option value="least_conn;" {% if form_data.get('lb_method') == 'least_conn;' %}selected{% endif %}>least_conn</option>
+                <option value="ip_hash;" {% if form_data.get('lb_method') == 'ip_hash;' %}selected{% endif %}>ip_hash</option>
+              </select>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">✔ Enregistrer</button>
+              <a href="{{ url_for('reverseproxies_list') }}" class="btn btn-secondary">Annuler</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('rpForm');
+  const hostnameRe = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+
+  function validateField(el, condition, msg) {
+    if (!condition) {
+      el.classList.add('is-invalid'); el.classList.remove('is-valid');
+      el.nextElementSibling.textContent = msg; return false;
+    }
+    el.classList.remove('is-invalid'); el.classList.add('is-valid'); return true;
+  }
+
+  function validateAll() {
+    let ok = true;
+    const name = document.getElementById('name');
+    const s1 = document.getElementById('server1');
+    const s2 = document.getElementById('server2');
+
+    if (!validateField(name, name.value.trim().length > 0 && name.value.trim().length <= 100,
+        "Le nom est obligatoire (max 100 caractères).")) ok = false;
+    if (!validateField(s1, hostnameRe.test(s1.value.trim()),
+        "Hostname invalide (ex: server1.domain.tld).")) ok = false;
+    if (!validateField(s2, hostnameRe.test(s2.value.trim()),
+        "Hostname invalide (ex: server2.domain.tld).")) ok = false;
+    if (s1.value.trim() && s2.value.trim() && s1.value.trim() === s2.value.trim()) {
+      validateField(s2, false, "Les deux serveurs doivent être différents."); ok = false;
+    }
+    return ok;
+  }
+
+  ['name','server1','server2'].forEach(id => {
+    document.getElementById(id).addEventListener('input', validateAll);
+    document.getElementById(id).addEventListener('blur', validateAll);
+  });
+
+  form.addEventListener('submit', function(e) {
+    if (!validateAll()) { e.preventDefault(); e.stopPropagation(); }
+  });
+})();
+</script>
+{% endblock %}

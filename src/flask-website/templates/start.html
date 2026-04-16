@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block title %}Accueil{% endblock %}
+{% block head %}{{ super() }}{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="py-5 text-center">
+    <h1>&#9881; Web Configurator</h1>
+    <p class="lead">Générateur de configurations Nginx pour vos serveurs web, reverse proxies et load balancers.</p>
+  </div>
+  <div class="row text-center g-4">
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="card-title">&#128196; Serveurs Web</h3>
+          <p class="card-text">Gérez vos configurations de serveurs web Nginx.</p>
+          <a href="{{ url_for('webservers_list') }}" class="btn btn-primary">Voir la liste</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="card-title">&#8644; Reverse Proxy</h3>
+          <p class="card-text">Configurez vos reverse proxies avec load balancing.</p>
+          <a href="{{ url_for('reverseproxies_list') }}" class="btn btn-primary">Voir la liste</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="card-title">&#9878; Load Balancer</h3>
+          <p class="card-text">Gérez vos configurations de load balancers.</p>
+          <a href="{{ url_for('loadbalancers_list') }}" class="btn btn-primary">Voir la liste</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

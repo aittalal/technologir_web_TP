@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block title %}Ajouter un Load Balancer{% endblock %}
+{% block content %}
+<div class="container">
+  <h2 class="mb-4">Ajouter un Load Balancer</h2>
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <form method="POST" id="lbForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
+              <input type="text" name="name" id="name" class="form-control {% if errors.name %}is-invalid{% endif %}"
+                value="{{ form_data.get('name', '') }}" placeholder="LB Inter 1" maxlength="100">
+              <div class="invalid-feedback">{{ errors.name or "Le nom est obligatoire." }}</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">IP Bind <span class="text-danger">*</span></label>
+              <input type="text" name="ip_bind" id="ip_bind" class="form-control {% if errors.ip_bind %}is-invalid{% endif %}"
+                value="{{ form_data.get('ip_bind', '') }}" placeholder="192.168.1.1">
+              <div class="invalid-feedback">{{ errors.ip_bind or "Adresse IPv4 valide requise." }}</div>
+              <div class="form-text">Adresse IPv4 (ex: 192.168.1.1 ou 172.0.0.1)</div>
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Proxy Pass (URL) <span class="text-danger">*</span></label>
+              <input type="text" name="pass" id="pass" class="form-control {% if errors.pass %}is-invalid{% endif %}"
+                value="{{ form_data.get('pass', '') }}" placeholder="http://localhost/app">
+              <div class="invalid-feedback">{{ errors.pass or "URL valide requise (http:// ou https://)." }}</div>
+              <div class="form-text">URL complète vers le backend (ex: http://localhost/A)</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">✔ Enregistrer</button>
+              <a href="{{ url_for('loadbalancers_list') }}" class="btn btn-secondary">Annuler</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('lbForm');
+  const ipRe  = /^(\d{1,3}\.){3}\d{1,3}$/;
+  const urlRe = /^https?:\/\/[^\s/$.?#].[^\s]*$/;
+
+  function validateField(el, condition, msg) {
+    if (!condition) {
+      el.classList.add('is-invalid'); el.classList.remove('is-valid');
+      el.nextElementSibling.textContent = msg; return false;
+    }
+    el.classList.remove('is-invalid'); el.classList.add('is-valid'); return true;
+  }
+
+  function validIP(ip) {
+    if (!ipRe.test(ip)) return false;
+    return ip.split('.').every(p => parseInt(p) >= 0 && parseInt(p) <= 255);
+  }
+
+  function validateAll() {
+    let ok = true;
+    const name = document.getElementById('name');
+    const ip = document.getElementById('ip_bind');
+    const p = document.getElementById('pass');
+
+    if (!validateField(name, name.value.trim().length > 0 && name.value.trim().length <= 100,
+        "Le nom est obligatoire (max 100 caractères).")) ok = false;
+    if (!validateField(ip, validIP(ip.value.trim()),
+        "Adresse IPv4 invalide (ex: 192.168.1.1).")) ok = false;
+    if (!validateField(p, urlRe.test(p.value.trim()),
+        "URL invalide. Doit commencer par http:// ou https://.")) ok = false;
+    return ok;
+  }
+
+  ['name','ip_bind','pass'].forEach(id => {
+    document.getElementById(id).addEventListener('input', validateAll);
+    document.getElementById(id).addEventListener('blur', validateAll);
+  });
+
+  form.addEventListener('submit', function(e) {
+    if (!validateAll()) { e.preventDefault(); e.stopPropagation(); }
+  });
+})();
+</script>
+{% endblock %}

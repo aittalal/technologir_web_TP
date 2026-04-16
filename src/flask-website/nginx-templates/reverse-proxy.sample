@@ -1,0 +1,13 @@
+http {
+    upstream backend {
+        # lb_strategy_method;
+        server server1.domain.tld;
+        server server2.domain.tld;
+    }
+    
+    server {
+        location / {
+            proxy_pass http://backend;
+        }
+    }
+}
